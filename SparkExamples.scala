@@ -2,11 +2,11 @@
 // The best way to learn Spark is through examples
 // In this file we present cases using Spark 2.2.0 with Scala 2.11.8
 // We will show examples of analysis using Spark directly in the REPL with SCALA language.
-//NOTE: The examples used here are fictional, created by myself.
+// NOTE: The examples used here are fictional, created by myself. It does not represent the reality. It is just a fake example.
 // <Portugues>  A melhor maneira de aprender Spark é através de exemplos
 // Neste arquivo apresentamos casos usando o Spark 2.2.0 com Scala 2.11.8
 // Nos mostraremos exemplos de analises usando o Spark diretamente no REPL com a linguagem SCALA.
-//OBS: Os exemplos usados aqui são fictícios, criados por mim.
+//OBS: Os exemplos usados aqui são fictícios, criados por mim. Não representam dados reais.
 
 
 // Inicializing Spark.
