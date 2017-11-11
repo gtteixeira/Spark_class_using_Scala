@@ -1,5 +1,5 @@
 
-// The best way to learn Spark is through examples
+// The best way to learn Spark is through examples. 
 // In this file we present cases using Spark 2.2.0 with Scala 2.11.8
 // We will show examples of analysis using Spark directly in the REPL with SCALA language.
 // NOTE: The examples used here are fictional, created by myself. It does not represent the reality. It is just a fake example.
@@ -7,6 +7,9 @@
 // Neste arquivo apresentamos casos usando o Spark 2.2.0 com Scala 2.11.8
 // Nos mostraremos exemplos de analises usando o Spark diretamente no REPL com a linguagem SCALA.
 //OBS: Os exemplos usados aqui são fictícios, criados por mim. Não representam dados reais.
+
+//  Apache Spark™ is a fast and general engine for large-scale data processing.
+//   More information about Spark, SparkSQL and MLLib please refer to www.spark.apache.org
 
 
 // Inicializing Spark.
@@ -391,6 +394,252 @@ DecisionTreeClassificationModel (uid=dtc_65b5798ebde5) of depth 3 with 7 nodes
     Predict: 0.0
 
 //Congratulations! You have finished your Decision Tree Classifier with honor!!
+// Of course it is an easy example, in real situation it could lead to overfitting.
+
+
+
+/////////////////////////  Using the Multi Layer Perceptron Neural Network classifier   /////////////////////////  
+                              
+// Multi Layer Perceptron (MLP) is other important method of Machine Learning. More information refer to www.spark.apache.org
+// Firstly, we need to import the MLP libraries.  
+
+
+scala> import org.apache.spark.ml.Pipeline
+import org.apache.spark.ml.Pipeline
+
+scala> import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+
+scala> import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
+import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
+
+scala> import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+
+scala> import org.apache.spark.ml.feature.Interaction
+import org.apache.spark.ml.feature.Interaction
+
+scala> import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.feature.VectorAssembler
+
+
+
+//We will use the same dataset of the last example.
+scala> val mytable1 = spark.read.format( "json" ).load("Your_directory/pacients2ml.json")
+mytable1: org.apache.spark.sql.DataFrame = [Glucose: bigint, HDL: bigint ... 6 more fields]
+
+
+scala> mytable1.show()
++-------+---+---+----+-------------+-------------+---+---------+
+|Glucose|HDL|LDL|Risk|T_Cholesterol|Triglycerides| iD|     name|
++-------+---+---+----+-------------+-------------+---+---------+
+|     92| 55|192|   0|          247|          150|  1| Person#1|
+|     93| 29|193|   1|          222|          214|  2| Person#2|
+|     98| 55|198|   0|          253|          130|  3| Person#3|
+|     96| 48|196|   1|          244|          199|  4| Person#4|
+|    100| 29|200|   1|          229|          216|  5| Person#5|
+|     95| 31|195|   0|          226|          170|  6| Person#6|
+|    113| 22|213|   1|          235|          200|  7| Person#7|
+|    103| 29|203|   1|          232|          212|  8| Person#8|
+|     97| 55|197|   1|          252|          215|  9| Person#9|
+|    102| 75|202|   0|          277|          120| 10|Person#10|
+|     96| 29|196|   1|          225|          170| 11|Person#11|
+|    130| 45|230|   1|          275|          230| 12|Person#12|
+|    115| 29|215|   1|          255|          200| 13|Person#13|
+|     96| 57|196|   1|          253|          170| 14|Person#14|
+|     99| 44|199|   1|          243|          190| 15|Person#15|
+|    150| 32|250|   1|          282|          213| 16|Person#16|
+|    100| 43|200|   1|          243|          233| 17|Person#17|
+|    103| 29|203|   0|          232|           99| 18|Person#18|
+|     93| 33|193|   1|          226|          200| 19|Person#19|
+|     95| 21|195|   1|          216|          199| 20|Person#20|
++-------+---+---+----+-------------+-------------+---+---------+
+
+
+scala> mytable1.printSchema()
+root
+ |-- Glucose: long (nullable = true)
+ |-- HDL: long (nullable = true)
+ |-- LDL: long (nullable = true)
+ |-- Risk: long (nullable = true)
+ |-- T_Cholesterol: long (nullable = true)
+ |-- Triglycerides: long (nullable = true)
+ |-- iD: long (nullable = true)
+ |-- name: string (nullable = true)
+
+
+
+
+scala> val assembler = new VectorAssembler().setInputCols(Array( "Triglycerides", "Glucose", "LDL", "HDL", "T_Cholesterol")).setOutputCol("features")
+assembler: org.apache.spark.ml.feature.VectorAssembler = vecAssembler_b476040360c8
+
+scala> val data2 = assembler.transform(mytable1)
+data2: org.apache.spark.sql.DataFrame = [Glucose: bigint, HDL: bigint ... 7 more fields]
+
+scala> data2.show()
++-------+---+---+----+-------------+-------------+---+---------+--------------------+
+|Glucose|HDL|LDL|Risk|T_Cholesterol|Triglycerides| iD|     name|            features|
++-------+---+---+----+-------------+-------------+---+---------+--------------------+
+|     92| 55|192|   0|          247|          150|  1| Person#1|[150.0,92.0,192.0...|
+|     93| 29|193|   1|          222|          214|  2| Person#2|[214.0,93.0,193.0...|
+|     98| 55|198|   0|          253|          130|  3| Person#3|[130.0,98.0,198.0...|
+|     96| 48|196|   1|          244|          199|  4| Person#4|[199.0,96.0,196.0...|
+|    100| 29|200|   1|          229|          216|  5| Person#5|[216.0,100.0,200....|
+|     95| 31|195|   0|          226|          170|  6| Person#6|[170.0,95.0,195.0...|
+|    113| 22|213|   1|          235|          200|  7| Person#7|[200.0,113.0,213....|
+|    103| 29|203|   1|          232|          212|  8| Person#8|[212.0,103.0,203....|
+|     97| 55|197|   1|          252|          215|  9| Person#9|[215.0,97.0,197.0...|
+|    102| 75|202|   0|          277|          120| 10|Person#10|[120.0,102.0,202....|
+|     96| 29|196|   1|          225|          170| 11|Person#11|[170.0,96.0,196.0...|
+|    130| 45|230|   1|          275|          230| 12|Person#12|[230.0,130.0,230....|
+|    115| 29|215|   1|          255|          200| 13|Person#13|[200.0,115.0,215....|
+|     96| 57|196|   1|          253|          170| 14|Person#14|[170.0,96.0,196.0...|
+|     99| 44|199|   1|          243|          190| 15|Person#15|[190.0,99.0,199.0...|
+|    150| 32|250|   1|          282|          213| 16|Person#16|[213.0,150.0,250....|
+|    100| 43|200|   1|          243|          233| 17|Person#17|[233.0,100.0,200....|
+|    103| 29|203|   0|          232|           99| 18|Person#18|[99.0,103.0,203.0...|
+|     93| 33|193|   1|          226|          200| 19|Person#19|[200.0,93.0,193.0...|
+|     95| 21|195|   1|          216|          199| 20|Person#20|[199.0,95.0,195.0...|
++-------+---+---+----+-------------+-------------+---+---------+--------------------+
+
+
+scala> data2.printSchema()
+root
+ |-- Glucose: long (nullable = true)
+ |-- HDL: long (nullable = true)
+ |-- LDL: long (nullable = true)
+ |-- Risk: long (nullable = true)
+ |-- T_Cholesterol: long (nullable = true)
+ |-- Triglycerides: long (nullable = true)
+ |-- iD: long (nullable = true)
+ |-- name: string (nullable = true)
+ |-- features: vector (nullable = true)
+
+
+//We select the label and features columns.
+scala> val data3 = data2.select("Risk", "features")
+data3: org.apache.spark.sql.DataFrame = [Risk: bigint, features: vector]
+
+
+//The dataframe must have "label" and "features" named columns
+
+scala> val train = data3.toDF("label", "features")
+train: org.apache.spark.sql.DataFrame = [label: bigint, features: vector]
+
+//In this example our test will be performed with the same dataset, but in a real situation it would be a different one
+scala> val test = train
+test: org.apache.spark.sql.DataFrame = [label: bigint, features: vector]
+
+//Here we specify layers for the neural network
+scala> val layers = Array[Int](5,4,4,2)
+layers: Array[Int] = Array(5, 4, 4, 2)
+
+// Now, we create the trainer and set its parameters
+scala> val trainer = new MultilayerPerceptronClassifier().setLayers(layers).setBlockSize(128).setSeed(1234L).setMaxIter(100)
+trainer: org.apache.spark.ml.classification.MultilayerPerceptronClassifier = mlpc_0b0cfd06196c
+
+//...and train the model
+scala> val model = trainer.fit(train)
+model: org.apache.spark.ml.classification.MultilayerPerceptronClassificationModel = mlpc_0b0cfd06196c
+
+// Executing the MLP model in the test dataset
+scala> val result = model.transform(test)
+result: org.apache.spark.sql.DataFrame = [label: bigint, features: vector ... 1 more field]
+
+
+// Now we ask the REPL to show the table with results
+scala> result.select("prediction", "label").show()
++----------+-----+
+|prediction|label|
++----------+-----+
+|       1.0|    0|
+|       1.0|    1|
+|       1.0|    0|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    0|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    0|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    0|
+|       1.0|    1|
+|       1.0|    1|
++----------+-----+
+
+
+scala> val predictionAndLabels = result.select("prediction", "label")
+predictionAndLabels: org.apache.spark.sql.DataFrame = [prediction: double, label: bigint]
+
+// If you want, you can select (prediction, true label) and compute test error.
+scala> val evaluator = new MulticlassClassificationEvaluator().setMetricName("accuracy")
+evaluator: org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator = mcEval_259176b9902c
+
+//Printing results.
+scala> println("Test set accuracy = " + evaluator.evaluate(predictionAndLabels)) 
+Test set accuracy = 0.75
+
+//The accuracy was 0.75. In order to increase this accuray lets try a neural network with more neurons and hidden layers.
+
+scala> val layers = Array[Int](5,10,10,10,2)
+layers: Array[Int] = Array(5, 10, 10, 10, 2)
+
+scala> val trainer = new MultilayerPerceptronClassifier().setLayers(layers).setBlockSize(128).setSeed(1234L).setMaxIter(100)
+trainer: org.apache.spark.ml.classification.MultilayerPerceptronClassifier = mlpc_5dee0bea3565
+
+scala> val model = trainer.fit(train)
+model: org.apache.spark.ml.classification.MultilayerPerceptronClassificationModel = mlpc_5dee0bea3565
+
+scala> val result = model.transform(test)
+result: org.apache.spark.sql.DataFrame = [label: bigint, features: vector ... 1 more field]
+
+scala> result.select("prediction", "label").show()
++----------+-----+
+|prediction|label|
++----------+-----+
+|       0.0|    0|
+|       1.0|    1|
+|       0.0|    0|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    0|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       0.0|    0|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       1.0|    1|
+|       0.0|    0|
+|       1.0|    1|
+|       1.0|    1|
++----------+-----+
+
+
+scala> val predictionAndLabels = result.select("prediction", "label")
+predictionAndLabels: org.apache.spark.sql.DataFrame = [prediction: double, label: bigint]
+
+scala> val evaluator = new MulticlassClassificationEvaluator().setMetricName("accuracy")
+evaluator: org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator = mcEval_c27ee8521fb8
+
+scala> println("Test set accuracy = " + evaluator.evaluate(predictionAndLabels)) 
+Test set accuracy = 0.95
+
+//Now the accuray became 0.95, so good!
+//Congratulations! You have finished your MLP neural network Classifier with honor!! 
+                                
+                               
 
 
 
